@@ -27,7 +27,7 @@
     "url": "https://github.com/fdecampredon/as3-to-typescript/issues"
   },
   "author": "François de Campredon <francois.de.campredon@gmail.com>",
-  "licenses" : {
+  "licenses": {
     "type": "Apache",
     "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
   },

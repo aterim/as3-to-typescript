@@ -377,9 +377,13 @@ function emitType(node: Node) {
             type= 'boolean'
             break;
         case 'Number':
-        case 'int':
-        case 'uint':
             type = 'number'
+            break;
+        case 'int':
+            type = 'integer'
+            break;
+        case 'uint':
+            type = 'uint'
             break;
         case '*':
             type = 'any'

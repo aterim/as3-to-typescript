@@ -1,3 +1,16 @@
+#Модификация as3-to-typescript 
+
+int заменяется на integer
+uint на uint
+
+Установка: 
+
+```
+npm install -g git+https://github.com/aterim/as3-to-typescript.git
+```
+
+------------------------------------------------
+
 #as3-to-typescript
 
 > A tool that helps porting as3 codebase to typescript

@@ -41,7 +41,9 @@ function transformAST(node:Node, parentNode: Node): Node {
         node.end,
         node.text,
         [],
-        parentNode
+        parentNode,
+        node.isInt,
+        node.isUint
     );
     
     newNode.children = node.children.filter(
@@ -71,6 +73,8 @@ var globVars = [
 interface Declaration { 
     bound?: string; 
     name: string; 
+    isInt?: boolean;
+    isUint?: boolean;
 }
 
 export interface EmitterOptions { 
@@ -117,7 +121,9 @@ export function emit(ast: Node, source: string, options?: EmitterOptions) {
     
     enterScope([]);
     visitNode(transformAST(ast, null));
+
     catchup(data.source.length -1);
+   
     exitScope();
     return output;
 }
@@ -159,15 +165,23 @@ function visitNode(node: Node) {
         visitors[node.kind](node);
     } else {
         catchup(node.start);
+
         visitNodes(node.children);
+        
     }
 }
 
+var beginModule = false;
 function emitPackage(node: Node) {
     catchup(node.start);
     skip(NodeKind.PACKAGE.length);
     insert('module');
+
+    beginModule = true;
+
     visitNodes(node.children);
+
+    
 }
 
 function emitMeta(node: Node) {
@@ -326,6 +340,7 @@ function emitMethod(node: Node) {
 }
 
 function emitPropertyDecl(node: Node, isConst = false) {
+
     emitClassField(node);
     var name = node.findChild(NodeKind.NAME_TYPE_INIT);
     consume(isConst ? 'const': 'var', name.start);
@@ -368,6 +383,7 @@ function emitDeclaration(node: Node) {
 function emitType(node: Node) {
     catchup(node.start);
     skip(node.text.length);
+
     var type: string;
     switch(node.text) {
         case 'String':
@@ -427,7 +443,7 @@ function emitShortVector(node: Node) {
         skipTo(arrayLiteral.children[0].start)
         visitNodes(arrayLiteral.children)
         catchup(arrayLiteral.lastChild.end);
-    }
+    } 
     insert(')');
     skipTo(node.end);
 }
@@ -495,6 +511,7 @@ function emitRelation(node: Node) {
         return;
     }
     visitNodes(node.children)
+
 }
 
 function emitOp(node: Node) {
@@ -507,9 +524,18 @@ function emitOp(node: Node) {
     catchup(node.end);
 }
 
-
+var closeInt = 0;
+var waitEqualInt: string[] = [];
 function emitIdent(node: Node) {
+
+    if (node.text == "trace") {
+        insert("console.log");
+        state.index += node.text.length;
+        return;
+    }
+
     catchup(node.start);
+    
     if (node.parent && node.parent.kind === NodeKind.DOT) {
         //in case of dot just check the first
         if(node.parent.children[0] !== node) {
@@ -520,15 +546,48 @@ function emitIdent(node: Node) {
     if (isKeyWord(node.text)) {
         return;
     }
-    
+
     var def = findDefInScope(node.text);
+
+    
+    if (def && (def.isInt || def.isUint) && node.parent.kind != "assign" && !def.bound) {
+        if (def.isInt) {
+            insert("int.int(");
+        } else {
+            insert("int.uint(");
+        }
+        
+        closeInt = def.name.length;
+    }
+    
+
+    if (node.parent.kind == "assign") {
+        // if (node == node.parent.children[2]) {
+        //     if (def.isInt) {
+        //         insert("int.int(");
+        //     } else {
+        //         insert("int.uint(");
+        //     }
+            
+        //     closeInt = def.name.length;
+        // }
+        if (node == node.parent.children[0]) {
+            waitEqualInt.push("int.uint(");
+            if (def.isInt) {
+                waitEqualInt.push("int.int(");
+            } 
+        }
+    }
+
     if (def && def.bound) {
         insert(def.bound + '.');
     }
+    
     if (!def && state.currentClassName && globVars.indexOf(node.text) === -1 && state.emitThisForNextIdent && node.text !== state.currentClassName) {
         insert('this.');
     }
-    state.emitThisForNextIdent = true;
+
+    state.emitThisForNextIdent = true; 
 }
 
 function emitXMLLiteral(node: Node) {
@@ -566,9 +625,12 @@ function enterClassScope(contentsNode: Node[]) {
         var modList = node.findChild(NodeKind.MOD_LIST);
         var isStatic = modList && 
             modList.children.some(mod => mod.text === 'static');
+     
         return {
             name: nameNode.text,
-            bound: isStatic ? state.currentClassName : 'this'
+            bound: isStatic ? state.currentClassName : 'this',
+            isInt: nameNode.isInt,
+            isUint: nameNode.isUint
         };
     }).filter(el => !!el);
 
@@ -590,15 +652,24 @@ function enterFunctionScope(node: Node) {
     }
     var block = node.findChild(NodeKind.BLOCK);
     if (block) {
+
         function traverse(node: Node): Declaration[] {
             var result = new Array<Declaration>();
             if (node.kind === NodeKind.VAR_LIST || node.kind === NodeKind.CONST_LIST ||
                 node.kind === NodeKind.VAR || node.kind === NodeKind.CONST) {
+
+                //    console.log(node.findChildren(NodeKind.NAME_TYPE_INIT));
+                    
                 result = result.concat(
                     node
                         .findChildren(NodeKind.NAME_TYPE_INIT)
-                        .map(node => ({ name: node.findChild(NodeKind.NAME).text }))
+                        .map(node => {
+                            var n = node.findChild(NodeKind.NAME);
+                            return ({ name: n.text, isInt: n.isInt, isUint: n.isUint})
+                        })
                 );
+
+               // console.log(result);
             } 
             if (node.kind !== NodeKind.FUNCTION && node.children && node.children.length) {
                 result = Array.prototype.concat.apply(result, node.children.map(traverse));
@@ -607,7 +678,7 @@ function enterFunctionScope(node: Node) {
         }
         decls = decls.concat(traverse(block));
     }
-    
+    //console.log(decls);
     enterScope(decls);
 }
 
@@ -661,14 +732,72 @@ function commentNode(node: Node, catchSemi:boolean) {
     insert('*/'); 
 }
 
+var isStatic = -1;
+var modifs = ["public", "private", "protected"];
+var waitEnd = [];
+
 function catchup(index: number) {
     if (state.index > index) {
         return;
     }
+    
+   var lng = output.length;
+   var text = "";
     while (state.index !== index) {
         output += data.source[state.index];
+
+        text += data.source[state.index];
         state.index++;
+        
+
+        if (beginModule) {
+            if (data.source[state.index-1] == "{") {
+                beginModule = false;
+                insert("\n\n    import int = flash.utils.int;\n");
+            }
+        }
+
+        if (waitEqualInt.length) {
+            if (data.source[state.index-1] == "=") {
+                insert(" " + waitEqualInt.pop()); 
+   
+                waitEnd.push(0)
+            }
+        }
+
+        if (closeInt) {
+            closeInt--;
+            if (!closeInt) {
+                insert(")");
+            }
+        }
+
+        if (waitEnd.length) {
+            if (data.source[state.index] == "\n" || data.source[state.index] == "\r" || data.source[state.index] == ";"
+            || (data.source[state.index] == ")" )) {
+                insert(")");
+                waitEnd.pop();
+            }
+
+            // bracketCounter
+            if (data.source[state.index] == "(") waitEnd[waitEnd.length - 1]++;
+            if (data.source[state.index] == ")") waitEnd[waitEnd.length - 1]--;
+        }
     }
+    if (text == "static") {
+        isStatic = lng;
+    } else {
+
+        if (isStatic != -1 && text != "" && text != " ") {
+
+            if (modifs.indexOf(text) != -1) {
+                output = output.substring(0, isStatic) + text + " static"; //+ output.substring(isStatic);
+            }
+  
+            isStatic = -1;          
+        }
+    }
+  
 }
 
 function skipTo(index: number) {

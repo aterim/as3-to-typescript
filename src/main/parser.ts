@@ -414,9 +414,16 @@ class AS3Parser {
         else if (this.tok.isNumeric || /('|")/.test(this.tok.text[0])) {
             result = new Node(NodeKind.LITERAL, this.tok.index, this.tok.end, this.tok.text);
         } else {
-            result = new Node(NodeKind.IDENTIFIER,  this.tok.index, this.tok.end, this.tok.text);
+            result = new Node(NodeKind.IDENTIFIER, this.tok.index, this.tok.end, this.tok.text);
+           // console.log(this.tok.text);
         }
         this.nextToken(true);
+
+        // console.log("\n\n");
+        
+        // console.log(result);
+        
+
         return result;
     }
 
@@ -455,7 +462,7 @@ class AS3Parser {
         else if (this.tokIs(Operators.LEFT_CURLY_BRACKET)) {
             result = this.parseBlock();
         }
-        else if (this.tokIs(KeyWords.VAR)) {
+        else if (this.tokIs(KeyWords.VAR)) { 
             result = this.parseVar();
         }
         else if (this.tokIs(KeyWords.CONST)) {
@@ -1434,12 +1441,21 @@ class AS3Parser {
     private parseNameTypeInit(): Node {
         var result: Node = new Node(NodeKind.NAME_TYPE_INIT, this.tok.index, -1);
         result.children.push(new Node(NodeKind.NAME, this.tok.index, this.tok.end, this.tok.text));
+
         this.nextToken(true); // name
         result.children.push(this.parseOptionalType());
         result.children.push(this.parseOptionalInit());
         result.end = result.children.reduce((index: number, child: Node) => {
             return Math.max(index, child ? child.end : 0);
         }, result.end);
+
+        var chType = result.findChild(NodeKind.TYPE);
+        var chName = result.findChild(NodeKind.NAME);
+
+        chName.isInt = chType.isInt;
+        chName.isUint = chType.isUint;
+        
+        //console.log(":", chName.text += "#", chType.text); //###
         return result;
     }
 
@@ -1495,9 +1511,9 @@ class AS3Parser {
 
     /**
      * if tok is "=" parse the expression otherwise do nothing
-     * 
+     * ###
      * @return
-     */
+     */ 
     private parseOptionalInit(): Node {
         var result: Node = null;
         if (this.tokIs(Operators.EQUAL)) {
@@ -1521,6 +1537,7 @@ class AS3Parser {
             this.nextToken(true);
             result = this.parseType();
         }
+        
         return result;
     }
 
@@ -1629,6 +1646,8 @@ class AS3Parser {
 
     private parseRelationalExpression(): Node {
         var result: Node = new Node(NodeKind.RELATION, this.tok.index, -1, null, [this.parseShiftExpression()]);
+        //console.log(result);
+        
         while (this.tokIs(Operators.INFERIOR)
             || this.tokIs(Operators.INFERIOR_AS2) || this.tokIs(Operators.INFERIOR_OR_EQUAL)
             || this.tokIs(Operators.INFERIOR_OR_EQUAL_AS2) || this.tokIs(Operators.SUPERIOR)
@@ -1860,8 +1879,16 @@ class AS3Parser {
         else {
             var index = this.tok.index,
                 name = this.parseQualifiedName(true);
-            result = new Node(NodeKind.TYPE, index, index + name.length, name);
-            // this.nextToken( true );
+
+            var isInt = undefined;
+            var isUint = undefined;
+
+            switch (name) {
+                case "int": isInt = true; break;
+                case "uint": isUint = true; break;
+            }
+
+            result = new Node(NodeKind.TYPE, index, index + name.length, name, undefined, undefined, isInt, isUint);
         }
         return result;
     }

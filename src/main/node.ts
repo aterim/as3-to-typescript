@@ -6,7 +6,9 @@ class Node {
         public end: number,
         public text?: string,
         public children?: Node[],
-        public parent? :Node
+        public parent? :Node,
+        public isInt?: boolean,
+        public isUint?: boolean
     ) {
         if (!this.children) {
             this.children = []

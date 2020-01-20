@@ -19,6 +19,8 @@ package
 			_bestScore = 3
 			trace(i1 + mainSeed + 8 + _bestScore);
 
+			var k: Number = 9
+
 			_bestScore += mainSeed + (mainSeed += (2+2));
 		}
 

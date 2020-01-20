@@ -22,7 +22,9 @@ module
 			this._bestScore = int.int( 3)
 			console.log(int.int(i1) + Main.mainSeed + 8 + this._bestScore);
 
-			this._bestScore += int.int( Main.mainSeed + (Main.mainSeed += int.uint( (2+2)) ) );
+			var k: number = 9
+
+			this._bestScore += int.int( Main.mainSeed + (Main.mainSeed += int.uint( (2+2))));
 		}
 
 	}

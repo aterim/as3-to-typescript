@@ -534,6 +534,12 @@ function emitIdent(node: Node) {
         return;
     }
 
+    if (node.text == "int") {
+        insert("int.int");
+        state.index += node.text.length;
+        return;
+    }
+
     catchup(node.start);
     
     if (node.parent && node.parent.kind === NodeKind.DOT) {
@@ -556,7 +562,7 @@ function emitIdent(node: Node) {
         } else {
             insert("int.uint(");
         }
-        
+
         closeInt = def.name.length;
     }
     
@@ -572,9 +578,11 @@ function emitIdent(node: Node) {
         //     closeInt = def.name.length;
         // }
         if (node == node.parent.children[0]) {
-            waitEqualInt.push("int.uint(");
+            
             if (def.isInt) {
                 waitEqualInt.push("int.int(");
+            } else {
+                waitEqualInt.push("int.uint(");
             } 
         }
     }

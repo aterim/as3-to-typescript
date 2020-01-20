@@ -555,36 +555,45 @@ function emitIdent(node: Node) {
 
     var def = findDefInScope(node.text);
 
+    // if (def && def.name == "b")
+    // console.log(":"+ node.parent.kind + ":");
     
-    if (def && (def.isInt || def.isUint) && node.parent.kind != "assign" && !def.bound) {
+
+    var types = ["init", "add", "mul", "relation", "arguments"]
+    if (def && (def.isInt || def.isUint) && types.indexOf(node.parent.kind) != -1 && !def.bound) {
+    //if (def && (def.isInt || def.isUint) && node.parent.kind != "assign" && !def.bound) {
+    //if (def && (def.isInt || def.isUint) && node.parent.kind == "init" && !def.bound) {
         if (def.isInt) {
             insert("int.int(");
         } else {
             insert("int.uint(");
         }
-
+        
         closeInt = def.name.length;
+       // console.log(def, node.parent.kind);
     }
-    
 
-    if (node.parent.kind == "assign") {
-        // if (node == node.parent.children[2]) {
-        //     if (def.isInt) {
-        //         insert("int.int(");
-        //     } else {
-        //         insert("int.uint(");
-        //     }
-            
-        //     closeInt = def.name.length;
-        // }
+    if (node.parent.kind == "assign" && (def.isInt || def.isUint)) {
+
         if (node == node.parent.children[0]) {
             
             if (def.isInt) {
                 waitEqualInt.push("int.int(");
-            } else {
+            }  else {
                 waitEqualInt.push("int.uint(");
             } 
+       
+        } else {
+            if (def.isInt) {
+                insert("int.int(");
+            } else {
+                insert("int.uint(");
+            }
+
+            closeInt = def.name.length;
+            //console.log(def, node.parent.kind);
         }
+ 
     }
 
     if (def && def.bound) {
@@ -592,10 +601,14 @@ function emitIdent(node: Node) {
     }
     
     if (!def && state.currentClassName && globVars.indexOf(node.text) === -1 && state.emitThisForNextIdent && node.text !== state.currentClassName) {
+  
         insert('this.');
     }
 
     state.emitThisForNextIdent = true; 
+
+   // if (node.text == "test")
+  //  console.log(node.parent.children[1].children[0].parent);
 }
 
 function emitXMLLiteral(node: Node) {
@@ -652,8 +665,11 @@ function enterFunctionScope(node: Node) {
         decls = params.children.map(param => {
             var nameTypeInit  = param.findChild(NodeKind.NAME_TYPE_INIT);
             if (nameTypeInit) {
-                return {name: nameTypeInit.findChild(NodeKind.NAME).text}
+                var n2 = nameTypeInit.findChild(NodeKind.NAME);
+             
+                return {name: n2.text, isInt: n2.isInt, isUint: n2.isUint}
             } 
+        
             var rest = param.findChild(NodeKind.REST)
             return { name: rest.text };
         });
@@ -792,6 +808,10 @@ function catchup(index: number) {
             if (data.source[state.index] == ")") waitEnd[waitEnd.length - 1]--;
         }
     }
+
+    // console.log(text);
+    
+
     if (text == "static") {
         isStatic = lng;
     } else {

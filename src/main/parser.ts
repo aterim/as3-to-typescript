@@ -413,6 +413,8 @@ class AS3Parser {
         }
         else if (this.tok.isNumeric || /('|")/.test(this.tok.text[0])) {
             result = new Node(NodeKind.LITERAL, this.tok.index, this.tok.end, this.tok.text);
+            //console.log(this.tok);
+            
         } else {
             result = new Node(NodeKind.IDENTIFIER, this.tok.index, this.tok.end, this.tok.text);
            // console.log(this.tok.text);
@@ -600,6 +602,40 @@ class AS3Parser {
         this.nextToken(); // name
         var params: Node = this.parseParameterList();
         var returnType: Node = this.parseOptionalType();
+
+        // var chType = name.findChild(NodeKind.TYPE);
+        // var chName = name.findChild(NodeKind.NAME);
+
+        // chName.isInt = chType.isInt;
+        // chName.isUint = chType.isUint;
+
+        if (params.children.length) {
+        
+            params.children.forEach(c=>{
+                if (c.kind == "parameter") {
+                    c.children.forEach(t=>{
+                        if (t.kind == "name-type-init") {
+                            //console.log(t.children);
+
+                            var chType = t.findChild(NodeKind.TYPE);
+                            var chName = t.findChild(NodeKind.NAME);
+
+                            chName.isInt = chType.isInt;
+                            chName.isUint = chType.isUint;
+
+                           // console.log(chName);
+                            //console.log(chName.isInt , chName.isUint);
+                            
+                        }
+                    })
+                    
+                }
+            });
+            
+        }
+        //console.log(params.children[1].children[0]);
+        
+
         return [type, name, params, returnType];
     }
 
@@ -613,6 +649,7 @@ class AS3Parser {
                 if (node.text === "get") {
                     return NodeKind.GET;
                 }
+                
                 return NodeKind.FUNCTION;
             }
         }
@@ -1150,6 +1187,7 @@ class AS3Parser {
         result.children.push(signature[1]);
         result.children.push(signature[2]);
         result.children.push(signature[3]);
+        
         if (this.tokIs(Operators.SEMI_COLUMN)) {
             this.consume(Operators.SEMI_COLUMN);
         }

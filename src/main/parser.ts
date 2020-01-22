@@ -603,12 +603,6 @@ class AS3Parser {
         var params: Node = this.parseParameterList();
         var returnType: Node = this.parseOptionalType();
 
-        // var chType = name.findChild(NodeKind.TYPE);
-        // var chName = name.findChild(NodeKind.NAME);
-
-        // chName.isInt = chType.isInt;
-        // chName.isUint = chType.isUint;
-
         if (params.children.length) {
         
             params.children.forEach(c=>{
@@ -620,11 +614,10 @@ class AS3Parser {
                             var chType = t.findChild(NodeKind.TYPE);
                             var chName = t.findChild(NodeKind.NAME);
 
-                            chName.isInt = chType.isInt;
-                            chName.isUint = chType.isUint;
-
-                           // console.log(chName);
-                            //console.log(chName.isInt , chName.isUint);
+                            if (chName && chType) {
+                                chName.isInt = chType.isInt;
+                                chName.isUint = chType.isUint;
+                            }
                             
                         }
                     })
@@ -1490,8 +1483,10 @@ class AS3Parser {
         var chType = result.findChild(NodeKind.TYPE);
         var chName = result.findChild(NodeKind.NAME);
 
-        chName.isInt = chType.isInt;
-        chName.isUint = chType.isUint;
+        if (chName && chType) {
+            chName.isInt = chType.isInt;
+            chName.isUint = chType.isUint;
+        }
         
         //console.log(":", chName.text += "#", chType.text); //###
         return result;

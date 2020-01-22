@@ -17,7 +17,7 @@ class Node {
     
     findChild(type: string): Node {
         for (var i = 0; i< this.children.length;i++) {
-            if (this.children[i].kind === type) {
+            if (this.children[i] && this.children[i].kind === type) {
                 return this.children[i]
             }
         }

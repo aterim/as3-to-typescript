@@ -573,7 +573,7 @@ function emitIdent(node: Node) {
        // console.log(def, node.parent.kind);
     }
 
-    if (node.parent.kind == "assign" && (def.isInt || def.isUint)) {
+    if (node.parent.kind == "assign" && def && (def.isInt || def.isUint)) {
 
         if (node == node.parent.children[0]) {
             

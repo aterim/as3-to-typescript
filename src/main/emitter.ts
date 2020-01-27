@@ -535,9 +535,13 @@ function emitIdent(node: Node) {
     }
 
     if (node.text == "int") {
-        insert("int.int");
-        state.index += node.text.length;
-        return;
+        var dot = data.source[state.index + 3];
+        
+        if (dot && dot != ".") {
+            insert("int.int");
+            state.index += node.text.length;
+            return;
+        }
     }
 
     catchup(node.start);

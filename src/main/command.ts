@@ -39,7 +39,7 @@ export function run() {
         displayHelp();
         process.exit(0);
     }
-    if (process.argv.length !== 4) {
+    if (process.argv.length < 4) {
         throw new Error('source dir and output dir are mandatory');
         process.exit(1)
     }
@@ -47,6 +47,7 @@ export function run() {
     if (!fs.existsSync(sourceDir) || !fs.statSync(sourceDir).isDirectory()) {
         throw new Error('invalid source dir');
     }
+
     
     var outputDir = path.resolve(process.cwd(), process.argv[3]);
     if (fs.existsSync(outputDir)) {
@@ -68,7 +69,7 @@ export function run() {
         console.log('parsing');
         var ast = parser.buildAst(path.basename(file), content);
         console.log('emitting');
-        (<any>fs).createFileSync(path.resolve(outputDir, file.replace(/.as$/, '.ts')), emitter.emit(ast, content));
+        (<any>fs).createFileSync(path.resolve(outputDir, file.replace(/.as$/, '.ts')), emitter.emit(ast, content, null, process.argv[4]));
         number ++;
     });
 }

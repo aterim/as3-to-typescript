@@ -100,7 +100,14 @@ var state: {
 };
 
 var output: string;
-export function emit(ast: Node, source: string, options?: EmitterOptions) {
+var preInitVar: boolean = false;
+export function emit(ast: Node, source: string, options?: EmitterOptions, flag?: string) {
+
+    if (flag == "-iv") {
+        preInitVar = true;
+    }
+    
+
     data = {
         source: source,
         options: assign(defaultEmitterOptions, options || {})
@@ -380,6 +387,7 @@ function emitDeclaration(node: Node) {
     }
 }
 
+var _varTrigger = false;
 function emitType(node: Node) {
     catchup(node.start);
     skip(node.text.length);
@@ -397,9 +405,19 @@ function emitType(node: Node) {
             break;
         case 'int':
             type = 'integer'
+
+            if (preInitVar) {
+                _varTrigger = true;
+            }
+            
             break;
         case 'uint':
             type = 'uint'
+
+            if (preInitVar) {
+                _varTrigger = true;
+            }
+            
             break;
         case '*':
             type = 'any'
@@ -772,21 +790,34 @@ function catchup(index: number) {
    var lng = output.length;
    var text = "";
     while (state.index !== index) {
-        output += data.source[state.index];
 
-        text += data.source[state.index];
+        var char = data.source[state.index];
+
+        if (_varTrigger) {
+
+            if (char == ";" || char == "\n" || char == "\r") {
+                output += " = 0";
+                _varTrigger = false;
+            } else if (char == "=") {
+                _varTrigger = false;
+            }
+        }
+
+        output += char;
+
+        text += char;
         state.index++;
         
 
         if (beginModule) {
-            if (data.source[state.index-1] == "{") {
+            if (char == "{") {
                 beginModule = false;
                 insert("\n\n    import int = flash.utils.int;\n");
             }
         }
 
         if (waitEqualInt.length) {
-            if (data.source[state.index-1] == "=") {
+            if (char == "=") {
                 insert(" " + waitEqualInt.pop()); 
    
                 waitEnd.push(0)

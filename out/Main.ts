@@ -1,14 +1,25 @@
 
 module com
-
-	public class TilePixel
-	{
+{
 
     import int = flash.utils.int;
 
-		export function TilePixel()
+	export class TilePixel
+	{
+
+		public n: number;
+		public i: integer = 0;
+		public ui: uint = 0;
+		public s: string;
+		public b: boolean;
+		public non;
+
+
+		constructor()
 		{
-			var i: integer = int.MAX_INT;
+			var ki: integer = 0;
+			var ki2: integer = int.int(ki);
 		}
 
 	}
+}

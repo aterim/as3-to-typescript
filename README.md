@@ -25,6 +25,10 @@ npm install -g git+https://github.com/aterim/as3-to-typescript.git
 
 
 
+TODO:
+- Обработка as
+- this у вызово статик методов
+
 
 --------------- :ОРИГИНАЛЬНАЯ ПАСТА: -------------------
 

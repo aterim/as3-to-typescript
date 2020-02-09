@@ -407,7 +407,12 @@ function emitType(node: Node) {
             type = 'integer'
 
             if (preInitVar) {
-                _varTrigger = true;
+                if (node.parent) {
+                    if (node.parent.kind == "name-type-init")
+                        _varTrigger = true;
+                }
+                
+            //    console.log(node)
             }
             
             break;
@@ -798,7 +803,7 @@ function catchup(index: number) {
             if (char == ";" || char == "\n" || char == "\r") {
                 output += " = 0";
                 _varTrigger = false;
-            } else if (char == "=") {
+            } else if (char == "=" || char == ")" || char == ":") {
                 _varTrigger = false;
             }
         }

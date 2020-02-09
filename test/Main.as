@@ -1,22 +1,47 @@
-
-package com
+package com.midasplayer.skill.framework
 {
-	public class TilePixel
-	{
+   import com.midasplayer.timing.ITickable;
+   
+   public class AbstractGame 
+   {
+       
+	   public var c: Vector.<int>;
 
-		public var n: Number;
-		public var i: int;
-		public var ui: uint;
-		public var s: String;
-		public var b: Boolean;
-		public var non;
+	   public var i: int;
+      
+      public function AbstractGame()
+      {
+         super();
+		 this.commands = new Vector.<int>();
 
-
-		public function TilePixel()
-		{
-			var ki: int;
-			var ki2: int = ki;
-		}
-
-	}
+		 var k: int;
+		 var r: int = 1;
+      }
+      
+      public function isDone() : Boolean
+      {
+         return true;
+      }
+      
+      override public function start() : void
+      {
+      }
+      
+      override public function stop() : void
+      {
+      }
+      
+      public function getScore() : int
+      {
+         return 0;
+      }
+      
+      public function tick(tick:int) : void
+      {
+      }
+      
+      override public function render(tick:int, alpha:Number) : void
+      {
+      }
+   }
 }

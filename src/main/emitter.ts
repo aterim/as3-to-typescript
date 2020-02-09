@@ -411,8 +411,6 @@ function emitType(node: Node) {
                     if (node.parent.kind == "name-type-init")
                         _varTrigger = true;
                 }
-                
-            //    console.log(node)
             }
             
             break;
@@ -420,7 +418,11 @@ function emitType(node: Node) {
             type = 'uint'
 
             if (preInitVar) {
-                _varTrigger = true;
+                //_varTrigger = true;
+                if (node.parent) {
+                    if (node.parent.kind == "name-type-init")
+                        _varTrigger = true;
+                }
             }
             
             break;
